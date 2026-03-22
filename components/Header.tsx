@@ -35,10 +35,19 @@ export default function Header() {
       setLoading(false)
     }
 
-    // onAuthStateChange가 INITIAL_SESSION 이벤트를 즉시 발생시키므로
-    // 이것만으로 초기 로드 + 로그인/로그아웃 변화 모두 처리
+    // 1) 마운트 시 즉시 세션 확인 (hard navigation 후 INITIAL_SESSION 보장)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchProfile(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    })
+
+    // 2) 이후 로그인/로그아웃 변화 감지
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (event === 'INITIAL_SESSION') return // getSession()이 이미 처리
         if (session?.user) {
           fetchProfile(session.user.id)
         } else {
