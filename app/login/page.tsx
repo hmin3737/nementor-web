@@ -9,20 +9,32 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [debug, setDebug] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setDebug('')
     setLoading(true)
     try {
       const supabase = getSupabase()
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      setDebug('signInWithPassword 호출 중...')
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
       if (authError) {
-        setError(authError.message)
+        setError('오류: ' + authError.message)
+        setDebug('authError: ' + JSON.stringify(authError))
         return
       }
-      // Hard navigation so onAuthStateChange fires INITIAL_SESSION with the new session
+      if (!data.session) {
+        setError('로그인 성공했지만 세션이 없음. 이메일 인증이 필요할 수 있습니다.')
+        setDebug('data: ' + JSON.stringify(data))
+        return
+      }
+      setDebug('세션 생성 완료. userId: ' + data.session.user.id + ' | 홈으로 이동 중...')
       window.location.href = '/'
+    } catch (e) {
+      setError('예외 발생: ' + String(e))
+      setDebug('catch: ' + String(e))
     } finally {
       setLoading(false)
     }
@@ -71,6 +83,9 @@ export default function LoginPage() {
 
           {error && (
             <p className="text-xs text-[#EF4444] text-center">{error}</p>
+          )}
+          {debug && (
+            <p className="text-xs text-[#6B6380] bg-[#F7F5FF] rounded p-2 break-all">{debug}</p>
           )}
 
           <button
