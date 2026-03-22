@@ -17,7 +17,7 @@ export default function AdminPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.replace('/login'); return }
       const { data: u } = await supabase.from('users').select('role').eq('id', session.user.id).single()
-      if (u?.role !== 'admin') { router.replace('/'); return }
+      if ((u as { role: string } | null)?.role !== 'admin') { router.replace('/'); return }
       setAuthorized(true)
     }
     check()
