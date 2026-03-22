@@ -20,7 +20,7 @@ export default function LoginPage() {
       const supabase = getSupabase()
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
       if (authError) {
-        setError('이메일 또는 비밀번호가 올바르지 않아요')
+        setError(authError.message)
         return
       }
       router.push('/')
