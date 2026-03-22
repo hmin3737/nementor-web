@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import 'react-quill-new/dist/quill.snow.css'
 import Header from '@/components/Header'
 
 export const metadata: Metadata = {
