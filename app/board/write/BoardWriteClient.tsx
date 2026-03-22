@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import 'react-quill-new/dist/quill.snow.css'
 import { getSupabase } from '@/lib/supabase'
 import type { MentorCertification } from '@/lib/types'
 import { parseBody } from '@/lib/types'
@@ -170,11 +171,10 @@ export default function BoardWriteClient() {
         setTimeout(() => router.push(`/board/${editPostId}`), 1000)
       } else {
         const { data: u } = await supabase.from('users')
-          .select('nickname, university').eq('id', session.user.id).single()
+          .select('nickname').eq('id', session.user.id).single()
         const { data: inserted } = await supabase.from('board_posts').insert({
           mentor_id: session.user.id,
-          mentor_nickname: u?.nickname ?? '',
-          mentor_university: u?.university ?? null,
+          mentor_nickname: (u as { nickname: string } | null)?.nickname ?? '',
           title: title.trim(), subtitle: subtitle.trim() || null,
           body: bodyJson, cert_id: selectedCertId,
         }).select('id').single()
