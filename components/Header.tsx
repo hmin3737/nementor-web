@@ -17,17 +17,16 @@ export default function Header() {
     const fetchProfile = async (userId: string) => {
       const { data } = await supabase
         .from('users')
-        .select('id, nickname, role, avatar_url, university')
+        .select('id, nickname, role, avatar_url')
         .eq('id', userId)
         .single()
-      const profile = data as { id: string; nickname: string; role: UserRole; avatar_url: string | null; university: string | null } | null
+      const profile = data as { id: string; nickname: string; role: UserRole; avatar_url: string | null } | null
       if (profile) {
         setUser({
           id: profile.id,
           nickname: profile.nickname,
           role: profile.role,
           avatarUrl: profile.avatar_url ?? undefined,
-          university: profile.university ?? undefined,
         })
       } else {
         setUser(null)
