@@ -7,15 +7,28 @@ export default function DebugSession() {
   const [info, setInfo] = useState('확인 중...')
 
   useEffect(() => {
-    getSupabase().auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        setInfo('getSession 오류: ' + error.message)
-      } else if (session) {
-        setInfo('세션 있음 ✓ userId: ' + session.user.id + ' | email: ' + session.user.email)
+    const run = async () => {
+      const supabase = getSupabase()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) { setInfo('getSession 오류: ' + sessionError.message); return }
+      if (!session) { setInfo('세션 없음 (null)'); return }
+
+      const userId = session.user.id
+      const { data, error: queryError } = await supabase
+        .from('users')
+        .select('id, nickname, role, avatar_url, university')
+        .eq('id', userId)
+        .single()
+
+      if (queryError) {
+        setInfo('세션 ✓ | users 쿼리 오류: ' + queryError.message + ' | code: ' + queryError.code)
+      } else if (!data) {
+        setInfo('세션 ✓ | users 쿼리 결과 없음 (null)')
       } else {
-        setInfo('세션 없음 (null)')
+        setInfo('세션 ✓ | users: ' + JSON.stringify(data))
       }
-    })
+    }
+    run()
   }, [])
 
   return (
