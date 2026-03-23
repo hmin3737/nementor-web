@@ -40,6 +40,8 @@ export default function BoardWriteClient() {
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [initialized, setInitialized] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const isNewsroomMode = searchParams.get('newsroom') === 'true'
+  const [newsroomLabel, setNewsroomLabel] = useState('내멘토 뉴스룸')
   const editorRef = useRef<QuillEditor>(null)
 
   const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -55,15 +57,16 @@ export default function BoardWriteClient() {
 
       const { data: u } = await supabase
         .from('users').select('id, role').eq('id', session.user.id).single()
-      if (!u || (u.role !== 'mentor' && u.role !== 'admin')) {
+      const uTyped = u as { id: string; role: string } | null
+      if (!uTyped || (uTyped.role !== 'mentor' && uTyped.role !== 'admin')) {
         router.replace('/'); return
       }
-      setUserId(u.id)
+      setUserId(uTyped.id)
 
       const { data: certs } = await supabase
         .from('mentor_certifications')
         .select('id, mentor_id, subject, level, display_order')
-        .eq('mentor_id', u.id)
+        .eq('mentor_id', uTyped.id)
         .order('display_order')
       if (certs) {
         setMyCerts(certs.map((c) => ({
@@ -175,6 +178,8 @@ export default function BoardWriteClient() {
         const { data: inserted } = await supabase.from('board_posts').insert({
           mentor_id: session.user.id,
           mentor_nickname: (u as { nickname: string } | null)?.nickname ?? '',
+          is_newsroom: isNewsroomMode,
+          newsroom_label: isNewsroomMode ? newsroomLabel : null,
           title: title.trim(), subtitle: subtitle.trim() || null,
           body: bodyJson, cert_id: selectedCertId,
         }).select('id').single()
@@ -203,7 +208,7 @@ export default function BoardWriteClient() {
       )}
 
       <h1 className="text-lg font-bold text-[#160534] mb-4">
-        {editPostId ? '칼럼 수정' : '칼럼 작성'}
+        {editPostId ? '칼럼 수정' : isNewsroomMode ? '뉴스룸 글 작성' : '칼럼 작성'}
       </h1>
 
       <div className="bg-white rounded-2xl border border-[#EDE8FA] overflow-hidden">
@@ -219,8 +224,23 @@ export default function BoardWriteClient() {
             className="w-full text-sm text-[#6B6380] outline-none placeholder:text-[#C4BBD4]" />
         </div>
 
-        {myCerts.length > 0 && (
+        {isNewsroomMode && (
+          <div className="px-4 py-3 border-b border-[#EDE8FA] flex items-center gap-3">
+            <span className="text-xs text-[#6B6380] font-medium flex-shrink-0">발행처</span>
+            <input
+              type="text"
+              value={newsroomLabel}
+              onChange={(e) => setNewsroomLabel(e.target.value.slice(0, 30))}
+              placeholder="내멘토 뉴스룸"
+              className="flex-1 text-sm text-[#0D0120] outline-none placeholder:text-[#C4BBD4]"
+            />
+            <span className="text-xs text-[#C4BBD4]">{newsroomLabel.length}/30</span>
+          </div>
+        )}
+
+        {!isNewsroomMode && myCerts.length > 0 && (
           <div className="px-4 py-3 border-b border-[#EDE8FA] flex items-center gap-3 flex-wrap">
+
             <span className="text-xs text-[#6B6380] font-medium flex-shrink-0">배지</span>
             <div className="flex items-center gap-2 flex-wrap">
               <button onClick={() => setSelectedCertId(null)}

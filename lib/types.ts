@@ -18,7 +18,7 @@ export interface MentorCertification {
 
 export interface BoardPost {
   id: string
-  mentorId: string
+  mentorId?: string
   mentorNickname: string
   mentorUniversity?: string
   mentorAvatarUrl?: string
@@ -34,6 +34,8 @@ export interface BoardPost {
   createdAt: string
   updatedAt: string
   isLiked?: boolean
+  isNewsroom?: boolean
+  newsroomLabel?: string
 }
 
 export interface BoardComment {
